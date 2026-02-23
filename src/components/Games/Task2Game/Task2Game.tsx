@@ -1,0 +1,96 @@
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useEffect, useMemo, useState } from "react";
+import { ResultOverlay } from "src/components/ResultOverlay";
+import { useDemoReset } from "src/hooks/useDemoReset";
+import { useResult } from "src/hooks/useResult";
+import { isDemoPage } from "src/utils/helpers";
+import { NumberPad } from "./NumberPad";
+import { ReferenceIcons } from "./ReferenceIcons";
+import { IconList, genRandomIconList } from "./utils";
+
+export const Task2Game: React.FC<{
+  tiles: number;
+  isTour?: boolean;
+  onTourComplete?: () => void;
+  onSuccess: () => void;
+  onError: () => void;
+  [x: string]: any;
+}> = ({ tiles, onSuccess, onError, isTour, onTourComplete, children }) => {
+  const [refreshKey, updateRefreshKey] = useState(1);
+  const [activeEle, setActiveEle] = useState(6);
+  const { result, setResult, resetResult } = useResult();
+
+  const randomList = useMemo(() => genRandomIconList(tiles), [tiles, refreshKey]);
+
+  useDemoReset(() => {
+    resetResult();
+    updateRefreshKey(refreshKey * -1);
+  });
+
+  useEffect(() => {
+    if (!result) return;
+
+    const timeout = setTimeout(() => {
+      resetResult();
+
+      if (result === "success") onSuccess();
+      else {
+        onError();
+
+        // For demo page
+        if (isDemoPage()) {
+          return;
+        }
+      }
+
+      const nextEle = Math.round(Math.random() * (tiles - 1));
+      setActiveEle(nextEle === activeEle ? (nextEle + tiles - 1) % tiles : nextEle);
+      updateRefreshKey(refreshKey * -1);
+    }, 250);
+    return () => clearInterval(timeout);
+  }, [result]);
+
+  return (
+    <div
+      className="items-center justify-between h-full fc section-padding gap-2.5"
+      style={{
+        background: "radial-gradient(#E4E3FF78, #D68DE878)",
+      }}
+    >
+      <ResultOverlay result={result} />
+
+      {children}
+
+      <div
+        id="sb-main-icon"
+        className={"relative size-28 md:scale-125 lg:scale-150 ".concat(
+          result === "success" ? "text-emerald-500" : result === "error" ? "text-red-500" : ""
+        )}
+        style={{
+          background: "radial-gradient(circle 60px, white, transparent)",
+        }}
+      >
+        <AnimatePresence>
+          <motion.img
+            key={activeEle * 100 + refreshKey}
+            initial={{ left: 250, height: "25%", width: "25%" }}
+            animate={{ left: 0, height: "auto", width: "auto" }}
+            exit={{ left: -200, height: "25%", width: "25%" }}
+            className="absolute inset-y-0 my-auto animate-shake"
+            src={`/images/task-2/${IconList[activeEle]}`}
+          />
+        </AnimatePresence>
+      </div>
+
+      <ReferenceIcons randomList={randomList} />
+
+      <NumberPad
+        randomList={randomList}
+        activeElement={activeEle}
+        isTour={isTour}
+        onTourComplete={onTourComplete}
+        setResult={setResult}
+      />
+    </div>
+  );
+};
