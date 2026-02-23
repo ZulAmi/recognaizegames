@@ -10,7 +10,7 @@ export function DemoComplete() {
   } = useDemoContext();
 
   return createPortal(
-    <div className="absolute inset-0 cc gap-y-8 z-[998] bg-black/75 font-medium">
+    <div className="absolute inset-0 cc gap-y-8 z-[1000] bg-black/75 font-medium">
       <DemoCard
         instruction={t.GAME_SPECIFIC["Great!\nNow it’s time to take the actual test."]}
         onNext={() => Router.replace("game")}
