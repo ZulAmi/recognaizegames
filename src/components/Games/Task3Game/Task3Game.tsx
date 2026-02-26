@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { useDemoReset } from "src/hooks/useDemoReset";
 import { demoNextStep } from "src/utils/helpers";
 import { Background } from "./Background";
@@ -17,10 +17,12 @@ interface props extends React.PropsWithChildren {
 export const Task3Game: React.FC<props> = memo(({ onSuccess, onError, points, onComplete, children, positions }) => {
   const [lines, setLines] = useState([] as any[]);
   const [prevPoint, setPrevPoint] = useState(-1);
+  const prevPointRef = useRef(-1);
 
   useDemoReset(() => {
     setLines(lines.slice(0, 3));
     setPrevPoint(3);
+    prevPointRef.current = 3;
   });
 
   useEffect(() => {
@@ -49,7 +51,9 @@ export const Task3Game: React.FC<props> = memo(({ onSuccess, onError, points, on
               } as React.CSSProperties
             }
             onClick={(e) => {
-              if (idx !== prevPoint + 1) {
+              const currentPrevPoint = prevPointRef.current;
+
+              if (idx !== currentPrevPoint + 1) {
                 onError();
 
                 const currentTarget = e.currentTarget;
@@ -67,17 +71,18 @@ export const Task3Game: React.FC<props> = memo(({ onSuccess, onError, points, on
                 return;
               }
 
+              prevPointRef.current = idx;
               setPrevPoint(idx);
 
               onSuccess();
 
-              if (prevPoint === -1) return;
+              if (currentPrevPoint === -1) return;
 
               setLines((z) => [
                 ...z,
                 {
-                  top: positions[prevPoint].top + 26,
-                  left: positions[prevPoint].left + 26,
+                  top: positions[currentPrevPoint].top + 26,
+                  left: positions[currentPrevPoint].left + 26,
                   bottom: top + 26,
                   right: left + 26,
                 },
